@@ -1,78 +1,51 @@
-/**
- * Create section-lists component.
- *
- * @param {HTMLElement} componentElem
- *
- * @returns {HTMLElement}
- */
-export function createComponent(componentElem) {
-  const templateElem = componentElem.querySelector(".app-tmp-section");
+import { createComponent as createSectionComponent } from "./input-list-component.js";
+
+const regenerateSectionTitleNumbers = (appContainer) => {
+  const sectionList = [...appContainer.querySelectorAll(".app-cmp-section")];
+  const totalSections = sectionList.length;
+
+  sectionList.forEach((sectionContainer, index) => {
+    [...sectionContainer.querySelectorAll(".app-title-section-number")].forEach(
+      (elem) => (elem.textContent = `Section ${index + 1}`)
+    );
+
+    [...sectionContainer.querySelectorAll(".app-cmd-remove-section")].forEach(
+      (elem) => (elem.disabled = totalSections === 1)
+    );
+  });
+};
+
+const createSection = (appContainer) => {
+  const templateElem = appContainer.querySelector(".app-tmp-section-component");
 
   if (templateElem === null) {
-    throw new Error("Template .app-tmp-section is not found");
+    throw new Error("Template .app-tmp-section-component is not found");
   }
 
-  const sectionListContainer = templateElem.parentElement;
+  const sectionNode = templateElem.content.cloneNode(true).firstElementChild;
 
-  if (sectionListContainer === null) {
-    throw new Error("Template .app-tmp-section does not have parent");
-  }
+  const sectionContainer = createSectionComponent(sectionNode);
 
-  // ------------------------------------------------------------
-  // Auto-number + Disable remove button when only 1 left
-  // ------------------------------------------------------------
-  const regenerateSectionNumbersAndStatus = () => {
-    const sectionItems = [
-      ...sectionListContainer.querySelectorAll(".app-cmp-section"),
-    ];
-
-    sectionItems.forEach((sectionElem, index) => {
-      // number
-      [...sectionElem.querySelectorAll(".app-title-section-number")].forEach(
-        (elem) => (elem.textContent = `${index + 1}`)
-      );
-
-      // disable remove button
-      [...sectionElem.querySelectorAll(".app-cmd-remove-section")].forEach(
-        (btn) => (btn.disabled = sectionItems.length === 1)
-      );
-    });
-  };
-
-  // ------------------------------------------------------------
-  // Create one section component
-  // ------------------------------------------------------------
-  const createSectionComponent = () => {
-    const sectionElem = templateElem.content.cloneNode(true).firstElementChild;
-
-    // handle remove section
-    sectionElem.addEventListener("click", (ev) => {
-      if (ev.target?.matches(".app-cmd-remove-section") ?? false) {
-        sectionElem.remove();
-        regenerateSectionNumbersAndStatus();
-      }
-    });
-
-    sectionListContainer.append(sectionElem);
-
-    regenerateSectionNumbersAndStatus();
-
-    return sectionElem;
-  };
-
-  // ------------------------------------------------------------
-  // Add section button
-  // ------------------------------------------------------------
-  componentElem.addEventListener("click", (ev) => {
-    if (ev.target?.matches(".app-cmd-add-section")) {
-      createSectionComponent();
+  sectionContainer.addEventListener("click", (ev) => {
+    if (ev.target?.matches(".app-cmd-remove-section") ?? false) {
+      sectionContainer.remove();
+      regenerateSectionTitleNumbers(appContainer);
     }
   });
 
-  // ------------------------------------------------------------
-  // Create first default section
-  // ------------------------------------------------------------
-  createSectionComponent();
+  appContainer.append(sectionContainer);
 
-  return componentElem;
-}
+  regenerateSectionTitleNumbers(appContainer);
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+  const appContainer = document.querySelector(".app-cmp-section-list");
+
+  appContainer.addEventListener("click", (ev) => {
+    if (ev.target?.matches(".app-cmd-add-section")) {
+      createSection(appContainer);
+    }
+  });
+
+  createSection(appContainer);
+});
